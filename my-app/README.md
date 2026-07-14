@@ -1,56 +1,112 @@
-# Welcome to your Expo app 👋
+# Instagram Felino 🐱
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Clon móvil de Instagram desarrollado con **React Native** y **Expo**, como parte del TP08 de la materia EFSI. Consume imágenes en tiempo real desde [The Cat API](https://thecatapi.com) para simular un feed de publicaciones.
 
-## Get started
+---
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Inicialización del entorno
 
 ```bash
-npm run reset-project
+npm install
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Luego escaneá el QR con la app **Expo Go** (Android/iOS) o presioná `a` para Android, `i` para iOS.
 
-### Other setup steps
+---
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## Referencia visual
 
-## Learn more
+El diseño fue basado en la interfaz oficial de Instagram para dispositivos móviles.  
+Referencia Figma: [Instagram Mobile UI – Community](https://www.figma.com/community/file/1293510563974944244)
 
-To learn more about developing your project with Expo, look at the following resources:
+---
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Árbol de directorios
 
-## Join the community
+```
+my-app/
+├── app.json                        ← Configuración de Expo (nombre, íconos, splash)
+├── assets/
+│   └── images/
+│       ├── icon.png                ← Ícono de la app
+│       └── splash-icon.png        ← Imagen de la SplashScreen
+└── src/
+    ├── app/                        ← Rutas (expo-router, file-based)
+    │   ├── _layout.tsx             ← Stack raíz + SplashScreen + StatusBar
+    │   ├── (tabs)/
+    │   │   ├── _layout.tsx         ← Tab bar inferior (Home + Perfil)
+    │   │   ├── index.tsx           ← Pantalla Home (Feed)
+    │   │   └── profile.tsx         ← Pantalla Perfil
+    │   └── post/
+    │       └── [id].tsx            ← Detalle de publicación (ruta dinámica)
+    ├── components/
+    │   ├── PostCard.tsx            ← Card individual del feed
+    │   └── HomeHeader.tsx          ← Header superior con logo Instagram
+    ├── services/
+    │   └── catApi.ts               ← Servicio HTTP con Axios hacia The Cat API
+    └── types/
+        └── post.ts                 ← Interfaces TypeScript: Post, CatApiResponse
+```
 
-Join our community of developers creating universal apps.
+---
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Componentes atómicos y props
+
+### `PostCard`
+Recibe un objeto `post: Post` por props y renderiza una publicación completa del feed.
+
+| Prop | Tipo   | Descripción                        |
+|------|--------|------------------------------------|
+| post | `Post` | Objeto con todos los datos del post |
+
+Maneja estado local con `useState`:
+- `liked: boolean` — si el usuario dio like
+- `likeCount: number` — contador de likes actualizado en tiempo real
+
+Al presionar la imagen navega a `/post/[id]` pasando todos los parámetros por `router.push`.
+
+### `HomeHeader`
+Componente presentacional sin props. Renderiza el logo "Instagram" en tipografía serif y los íconos de notificaciones y mensajes.
+
+---
+
+## Gestión de estados
+
+| Estado       | Ubicación             | Hook       | Descripción                                  |
+|--------------|-----------------------|------------|----------------------------------------------|
+| `posts`      | `(tabs)/index.tsx`    | `useState` | Array de publicaciones cargadas desde la API |
+| `loading`    | `(tabs)/index.tsx`    | `useState` | Controla el spinner de carga inicial         |
+| `error`      | `(tabs)/index.tsx`    | `useState` | Mensaje de error si la API falla             |
+| `liked`      | `PostCard.tsx`        | `useState` | Estado del botón de like por post            |
+| `likeCount`  | `PostCard.tsx`        | `useState` | Contador de likes reactivo por post          |
+| `liked`      | `post/[id].tsx`       | `useState` | Like en la vista de detalle                  |
+| `likeCount`  | `post/[id].tsx`       | `useState` | Contador de likes en el detalle              |
+| `gridPosts`  | `(tabs)/profile.tsx`  | `useState` | Posts para el grid del perfil                |
+
+La carga de la API se dispara una sola vez con `useEffect(fn, [])` al montar cada pantalla.
+
+---
+
+## Flujo de navegación
+
+```
+(tabs)/index.tsx  ──presionar post──►  post/[id].tsx
+       │
+       └── tab bar ──►  (tabs)/profile.tsx  ──presionar imagen──►  post/[id].tsx
+```
+
+La navegación usa **expo-router** con un Stack raíz que contiene las tabs y la ruta dinámica de detalle.
+
+---
+
+## Checklist de requisitos
+
+- [x] Barra de navegación nativa superior
+- [x] Feed con `FlatList` (prohibido `.map()`)
+- [x] Mínimo 10 registros desde API con Axios
+- [x] Estilos exclusivamente con `StyleSheet.create()`
+- [x] Interacciones con `TouchableOpacity` y `Pressable`
+- [x] Navegación Feed → Detalle → Perfil
+- [x] Grid de 3 columnas con `numColumns={3}`
+- [x] SplashScreen, ícono y StatusBar personalizados

@@ -1,15 +1,38 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import { useColorScheme } from 'react-native';
+import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+// Mantiene la splash visible hasta que la llamemos a ocultar
+SplashScreen.preventAutoHideAsync();
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+export default function RootLayout() {
+  useEffect(() => {
+    // La ocultamos después de un pequeño delay para asegurar que
+    // el layout ya se montó correctamente
+    const timer = setTimeout(() => {
+      SplashScreen.hideAsync();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
+    <>
+      {/* StatusBar oscura para contrastar con el header blanco de Instagram */}
+      <StatusBar style="dark" backgroundColor="#fff" />
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="post/[id]"
+          options={{
+            title: 'Publicación',
+            headerBackTitle: '',
+            headerStyle: { backgroundColor: '#fff' },
+            headerShadowVisible: true,
+            headerTintColor: '#000',
+          }}
+        />
+      </Stack>
+    </>
   );
 }
