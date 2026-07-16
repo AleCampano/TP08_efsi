@@ -1,92 +1,97 @@
-import { useState } from 'react';
-import {
-  FlatList,
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+// Componente de la barra de historias que aparece debajo del header en el feed.
+// Muestra una lista horizontal de avatares con nombre de usuario.
+// Al tocar una historia, el anillo de color pasa a gris (marcada como vista).
 
-interface Story {
+import { useState } from 'react';
+import { FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+
+// Definimos la forma de cada historia
+interface Historia {
   id: string;
   username: string;
   avatar: string;
-  seen: boolean;
+  vista: boolean; // true si el usuario ya la vio
 }
 
-const STORIES: Story[] = [
-  { id: '0', username: 'Tu historia', avatar: 'https://i.pravatar.cc/150?img=12', seen: true },
-  { id: '1', username: 'gatito_fan', avatar: 'https://i.pravatar.cc/150?img=1', seen: false },
-  { id: '2', username: 'michi_lover', avatar: 'https://i.pravatar.cc/150?img=2', seen: false },
-  { id: '3', username: 'cat.world', avatar: 'https://i.pravatar.cc/150?img=3', seen: false },
-  { id: '4', username: 'fluffy_paws', avatar: 'https://i.pravatar.cc/150?img=4', seen: false },
-  { id: '5', username: 'meow.daily', avatar: 'https://i.pravatar.cc/150?img=5', seen: false },
-  { id: '6', username: 'cats_of_ig', avatar: 'https://i.pravatar.cc/150?img=6', seen: false },
-  { id: '7', username: 'whiskers99', avatar: 'https://i.pravatar.cc/150?img=7', seen: false },
-  { id: '8', username: 'purr.machine', avatar: 'https://i.pravatar.cc/150?img=8', seen: false },
-  { id: '9', username: 'neko_fan', avatar: 'https://i.pravatar.cc/150?img=9', seen: false },
+// Lista fija de historias simuladas
+const HISTORIAS: Historia[] = [
+  { id: '0', username: 'Tu historia', avatar: 'https://i.pravatar.cc/150?img=12', vista: true },
+  { id: '1', username: 'gatito_fan',  avatar: 'https://i.pravatar.cc/150?img=1',  vista: false },
+  { id: '2', username: 'michi_lover', avatar: 'https://i.pravatar.cc/150?img=2',  vista: false },
+  { id: '3', username: 'cat.world',   avatar: 'https://i.pravatar.cc/150?img=3',  vista: false },
+  { id: '4', username: 'fluffy_paws', avatar: 'https://i.pravatar.cc/150?img=4',  vista: false },
+  { id: '5', username: 'meow.daily',  avatar: 'https://i.pravatar.cc/150?img=5',  vista: false },
+  { id: '6', username: 'cats_of_ig',  avatar: 'https://i.pravatar.cc/150?img=6',  vista: false },
+  { id: '7', username: 'whiskers99',  avatar: 'https://i.pravatar.cc/150?img=7',  vista: false },
+  { id: '8', username: 'purr.machine',avatar: 'https://i.pravatar.cc/150?img=8',  vista: false },
+  { id: '9', username: 'neko_fan',    avatar: 'https://i.pravatar.cc/150?img=9',  vista: false },
 ];
 
 export function StoriesBar() {
-  const [stories, setStories] = useState<Story[]>(STORIES);
+  // Guardamos las historias en estado para poder actualizar cuáles fueron vistas
+  const [historias, setHistorias] = useState<Historia[]>(HISTORIAS);
 
-  function handlePress(id: string) {
-    setStories((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, seen: true } : s))
+  // Cuando el usuario toca una historia, la marcamos como vista
+  function marcarComoVista(id: string) {
+    setHistorias((anterior) =>
+      anterior.map((h) => (h.id === id ? { ...h, vista: true } : h))
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={estilos.contenedor}>
       <FlatList
-        data={stories}
+        data={historias}
         keyExtractor={(item) => item.id}
-        horizontal
+        horizontal                          // lista horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={estilos.lista}
         renderItem={({ item }) => (
-          <StoryItem story={item} onPress={() => handlePress(item.id)} />
+          <ItemHistoria historia={item} alPresionar={() => marcarComoVista(item.id)} />
         )}
       />
     </View>
   );
 }
 
-function StoryItem({ story, onPress }: { story: Story; onPress: () => void }) {
-  const isMe = story.id === '0';
+// Componente que representa una historia individual en la barra
+function ItemHistoria({ historia, alPresionar }: { historia: Historia; alPresionar: () => void }) {
+  const esMia = historia.id === '0'; // "Tu historia" es la primera
 
   return (
-    <Pressable style={styles.item} onPress={onPress}>
-      {/* Anillo degradado o gris si ya se vio */}
-      <View style={[styles.ring, story.seen && styles.ringSeen]}>
-        <View style={styles.ringInner}>
-          <Image source={{ uri: story.avatar }} style={styles.avatar} />
+    <Pressable style={estilos.item} onPress={alPresionar}>
+
+      {/* Anillo de color: rosa si no fue vista, gris si ya fue vista */}
+      <View style={[estilos.anillo, historia.vista && estilos.anilloVisto]}>
+        {/* Borde blanco interno para separar el anillo del avatar */}
+        <View style={estilos.anilloInterior}>
+          <Image source={{ uri: historia.avatar }} style={estilos.avatar} />
         </View>
       </View>
 
-      {/* Botón "+" para "Tu historia" */}
-      {isMe && (
-        <View style={styles.addButton}>
-          <Text style={styles.addIcon}>+</Text>
+      {/* Botón "+" que aparece solo en "Tu historia" */}
+      {esMia && (
+        <View style={estilos.botonAgregar}>
+          <Text style={estilos.iconoAgregar}>+</Text>
         </View>
       )}
 
-      <Text style={styles.username} numberOfLines={1}>
-        {story.username}
+      <Text style={estilos.username} numberOfLines={1}>
+        {historia.username}
       </Text>
+
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
+const estilos = StyleSheet.create({
+  contenedor: {
     backgroundColor: '#fff',
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#dbdbdb',
     paddingVertical: 8,
   },
-  list: {
+  lista: {
     paddingHorizontal: 10,
     gap: 12,
   },
@@ -94,24 +99,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: 68,
   },
-  ring: {
+  anillo: {
     width: 66,
     height: 66,
     borderRadius: 33,
-    // Degradado simulado con borde de color
     borderWidth: 2,
-    borderColor: '#c13584',
+    borderColor: '#c13584', // rosa/morado de Instagram
     padding: 2,
     marginBottom: 4,
   },
-  ringSeen: {
-    borderColor: '#dbdbdb',
+  anilloVisto: {
+    borderColor: '#dbdbdb', // gris cuando ya fue vista
   },
-  ringInner: {
+  anilloInterior: {
     flex: 1,
     borderRadius: 30,
     overflow: 'hidden',
-    // Borde blanco interno para separar el anillo de la foto
     borderWidth: 2,
     borderColor: '#fff',
   },
@@ -119,7 +122,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  addButton: {
+  botonAgregar: {
     position: 'absolute',
     bottom: 20,
     right: 4,
@@ -132,7 +135,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  addIcon: {
+  iconoAgregar: {
     color: '#fff',
     fontSize: 14,
     lineHeight: 16,

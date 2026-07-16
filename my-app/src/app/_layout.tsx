@@ -1,32 +1,43 @@
+// Este es el layout raíz de la app. Es el primer componente que se monta.
+// Acá se configuran dos cosas globales:
+//   1. La SplashScreen (pantalla de carga que se ve al abrir la app)
+//   2. El Stack Navigator, que define las pantallas principales y cómo se navega entre ellas
+
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
-// Mantiene la splash visible hasta que la llamemos a ocultar
+// Evita que la SplashScreen se oculte sola antes de que estemos listos
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   useEffect(() => {
-    // La ocultamos después de un pequeño delay para asegurar que
-    // el layout ya se montó correctamente
+    // Ocultamos la SplashScreen luego de 500ms para asegurarnos
+    // de que el layout ya terminó de montarse antes de mostrar la app
     const timer = setTimeout(() => {
       SplashScreen.hideAsync();
     }, 500);
+
+    // Limpiamos el timer si el componente se desmonta antes de que termine
     return () => clearTimeout(timer);
   }, []);
 
   return (
     <>
-      {/* StatusBar oscura para contrastar con el header blanco de Instagram */}
+      {/* StatusBar oscura para que contraste bien con el header blanco */}
       <StatusBar style="dark" backgroundColor="#fff" />
+
+      {/* Stack define las pantallas de la app y cómo se apilan al navegar */}
       <Stack>
+        {/* Las tabs (Home + Perfil) no muestran header propio */}
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+
+        {/* Pantalla de detalle de un post, con header blanco y título */}
         <Stack.Screen
           name="post/[id]"
           options={{
             title: 'Publicación',
-            headerBackTitle: '',
             headerStyle: { backgroundColor: '#fff' },
             headerShadowVisible: true,
             headerTintColor: '#000',

@@ -1,3 +1,8 @@
+// Pantalla de Perfil del usuario.
+// Muestra la información del perfil (avatar, nombre, bio, estadísticas)
+// y una grilla de 3 columnas con todas las fotos, usando FlatList con numColumns=3.
+// Al tocar una foto navega al detalle del post.
+
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
@@ -16,156 +21,173 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { getCatPosts } from '@/services/catApi';
 import { Post } from '@/types/post';
 
-const NUM_COLUMNS = 3;
-const GAP = 1; // px entre columnas
+// Cuántas columnas tiene la grilla de fotos
+const COLUMNAS = 3;
+// Espacio en píxeles entre cada foto de la grilla
+const ESPACIO = 1;
 
-// Datos del perfil simulado
-const PROFILE = {
+// Datos fijos del perfil simulado
+const PERFIL = {
   username: 'gatito_feliz',
-  name: 'Michi Gatuno 🐱',
+  nombre: 'Michi Gatuno 🐱',
   bio: 'Fan de los gatos 🐾 | Fotógrafo felino | Buenos Aires, ARG',
   avatar: 'https://i.pravatar.cc/150?img=12',
-  posts: 24,
-  followers: 1842,
-  following: 312,
+  publicaciones: 24,
+  seguidores: 1842,
+  seguidos: 312,
 };
 
-export default function ProfileScreen() {
+export default function PantallaPerfil() {
   const router = useRouter();
-  const { width } = useWindowDimensions(); // reactivo al tamaño real del viewport
-  const itemSize = (width - GAP * (NUM_COLUMNS - 1)) / NUM_COLUMNS;
 
-  const [gridPosts, setGridPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
+  // useWindowDimensions nos da el ancho real de la pantalla,
+  // lo usamos para calcular el tamaño exacto de cada foto en la grilla
+  const { width } = useWindowDimensions();
+  const tamanoItem = (width - ESPACIO * (COLUMNAS - 1)) / COLUMNAS;
+
+  // Posts que se muestran en la grilla
+  const [postsPerfil, setPostsPerfil] = useState<Post[]>([]);
+  const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
     getCatPosts()
-      .then((data) => setGridPosts(data))
-      .finally(() => setLoading(false));
+      .then((data) => setPostsPerfil(data))
+      .finally(() => setCargando(false));
   }, []);
 
-  function handlePostPress(post: Post) {
+  // Navega al detalle del post con todos sus datos
+  function irAlDetalle(post: Post) {
     router.push({
       pathname: '/post/[id]',
       params: {
         id: post.id,
         imageUrl: post.imageUrl,
-        username: PROFILE.username,
+        username: PERFIL.username,
         location: 'Buenos Aires, Argentina',
         likes: post.likes,
         caption: post.caption,
-        avatar: PROFILE.avatar,
+        avatar: PERFIL.avatar,
       },
     });
   }
 
-  const ProfileHeader = () => (
-    <View>
-      <View style={styles.profileSection}>
-        <Image source={{ uri: PROFILE.avatar }} style={styles.avatar} />
-        <View style={styles.statsContainer}>
-          <StatItem value={PROFILE.posts} label="Publicaciones" />
-          <StatItem value={PROFILE.followers.toLocaleString()} label="Seguidores" />
-          <StatItem value={PROFILE.following} label="Seguidos" />
-        </View>
-      </View>
-
-      <Text style={styles.name}>{PROFILE.name}</Text>
-      <Text style={styles.bio}>{PROFILE.bio}</Text>
-
-      <TouchableOpacity style={styles.editButton}>
-        <Text style={styles.editButtonText}>Editar perfil</Text>
-      </TouchableOpacity>
-
-      {/* Íconos de grilla / reels / etiquetados (decorativos) */}
-      <View style={styles.tabsRow}>
-        <View style={[styles.tabItem, styles.tabItemActive]}>
-          <Text style={styles.tabIcon}>⊞</Text>
-        </View>
-        <View style={styles.tabItem}>
-          <Text style={styles.tabIcon}>▷</Text>
-        </View>
-        <View style={styles.tabItem}>
-          <Text style={styles.tabIcon}>◻</Text>
-        </View>
-      </View>
-
-      <View style={styles.divider} />
-    </View>
-  );
-
-  if (loading) {
+  // Encabezado del perfil: avatar, estadísticas, nombre, bio y botón
+  // Lo definimos acá para poder usarlo como ListHeaderComponent del FlatList
+  function EncabezadoPerfil() {
     return (
-      <SafeAreaView style={styles.centered} edges={['top']}>
+      <View>
+        {/* Fila superior: avatar + estadísticas */}
+        <View style={estilos.seccionPerfil}>
+          <Image source={{ uri: PERFIL.avatar }} style={estilos.avatar} />
+          <View style={estilos.estadisticas}>
+            <ItemEstadistica valor={PERFIL.publicaciones} etiqueta="Publicaciones" />
+            <ItemEstadistica valor={PERFIL.seguidores.toLocaleString()} etiqueta="Seguidores" />
+            <ItemEstadistica valor={PERFIL.seguidos} etiqueta="Seguidos" />
+          </View>
+        </View>
+
+        {/* Nombre y biografía */}
+        <Text style={estilos.nombre}>{PERFIL.nombre}</Text>
+        <Text style={estilos.bio}>{PERFIL.bio}</Text>
+
+        {/* Botón decorativo de editar perfil */}
+        <TouchableOpacity style={estilos.botonEditar}>
+          <Text style={estilos.textoBotonEditar}>Editar perfil</Text>
+        </TouchableOpacity>
+
+        {/* Tabs decorativas de grilla / reels / etiquetados */}
+        <View style={estilos.filaTabs}>
+          <View style={[estilos.tabItem, estilos.tabActiva]}>
+            <Text style={estilos.iconoTab}>⊞</Text>
+          </View>
+          <View style={estilos.tabItem}>
+            <Text style={estilos.iconoTab}>▷</Text>
+          </View>
+          <View style={estilos.tabItem}>
+            <Text style={estilos.iconoTab}>◻</Text>
+          </View>
+        </View>
+
+        <View style={estilos.divisor} />
+      </View>
+    );
+  }
+
+  // Mientras carga la API, mostramos un spinner
+  if (cargando) {
+    return (
+      <SafeAreaView style={estilos.centrado} edges={['top']}>
         <ActivityIndicator size="large" color="#c13584" />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
-      <View style={styles.screenHeader}>
-        <Text style={styles.screenTitle}>{PROFILE.username}</Text>
+    <SafeAreaView style={estilos.contenedor} edges={['top']}>
+
+      {/* Header con nombre de usuario y menú */}
+      <View style={estilos.headerPantalla}>
+        <Text style={estilos.tituloPantalla}>{PERFIL.username}</Text>
         <TouchableOpacity hitSlop={8}>
-          <Text style={styles.menuIcon}>☰</Text>
+          <Text style={estilos.iconoMenu}>☰</Text>
         </TouchableOpacity>
       </View>
 
+      {/* FlatList con numColumns=3 para mostrar la grilla de fotos */}
+      {/* key={width} hace que se re-renderice si el dispositivo rota */}
       <FlatList
-        data={gridPosts}
+        data={postsPerfil}
         keyExtractor={(item) => item.id}
-        numColumns={NUM_COLUMNS}
-        ListHeaderComponent={<ProfileHeader />}
+        numColumns={COLUMNAS}
+        ListHeaderComponent={<EncabezadoPerfil />}
         renderItem={({ item, index }) => (
           <Pressable
-            onPress={() => handlePostPress(item)}
+            onPress={() => irAlDetalle(item)}
             style={[
-              {
-                width: itemSize,
-                height: itemSize,
-              },
-              // Gap horizontal: agrega margen derecho a las dos primeras de cada fila
-              (index % NUM_COLUMNS) < NUM_COLUMNS - 1 && { marginRight: GAP },
-            ]}>
+              { width: tamanoItem, height: tamanoItem },
+              // Agrega espacio a la derecha de las dos primeras fotos de cada fila
+              (index % COLUMNAS) < COLUMNAS - 1 && { marginRight: ESPACIO },
+            ]}
+          >
             <Image
               source={{ uri: item.imageUrl }}
-              style={styles.gridImage}
+              style={estilos.imagenGrilla}
               resizeMode="cover"
             />
           </Pressable>
         )}
-        // Gap vertical entre filas
-        ItemSeparatorComponent={() => <View style={{ height: GAP }} />}
+        // Espacio vertical entre filas
+        ItemSeparatorComponent={() => <View style={{ height: ESPACIO }} />}
         showsVerticalScrollIndicator={false}
-        // Necesario para que FlatList calcule bien el ancho con numColumns
-        key={width} // re-render si cambia orientación
+        key={width}
       />
+
     </SafeAreaView>
   );
 }
 
-function StatItem({ value, label }: { value: number | string; label: string }) {
+// Componente auxiliar para cada estadística del perfil (publicaciones, seguidores, seguidos)
+function ItemEstadistica({ valor, etiqueta }: { valor: number | string; etiqueta: string }) {
   return (
-    <View style={styles.statItem}>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+    <View style={estilos.itemEstadistica}>
+      <Text style={estilos.valorEstadistica}>{valor}</Text>
+      <Text style={estilos.etiquetaEstadistica}>{etiqueta}</Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
+const estilos = StyleSheet.create({
+  contenedor: {
     flex: 1,
     backgroundColor: '#fff',
   },
-  centered: {
+  centrado: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#fff',
   },
-  screenHeader: {
+  headerPantalla: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -174,16 +196,16 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#dbdbdb',
   },
-  screenTitle: {
+  tituloPantalla: {
     fontWeight: '700',
     fontSize: 16,
     color: '#000',
   },
-  menuIcon: {
+  iconoMenu: {
     fontSize: 22,
     color: '#000',
   },
-  profileSection: {
+  seccionPerfil: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 14,
@@ -197,25 +219,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#dbdbdb',
   },
-  statsContainer: {
+  estadisticas: {
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-around',
   },
-  statItem: {
+  itemEstadistica: {
     alignItems: 'center',
   },
-  statValue: {
+  valorEstadistica: {
     fontWeight: '700',
     fontSize: 16,
     color: '#000',
   },
-  statLabel: {
+  etiquetaEstadistica: {
     fontSize: 12,
     color: '#000',
     marginTop: 2,
   },
-  name: {
+  nombre: {
     fontWeight: '700',
     fontSize: 13,
     color: '#000',
@@ -229,7 +251,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     marginBottom: 12,
   },
-  editButton: {
+  botonEditar: {
     marginHorizontal: 14,
     marginBottom: 12,
     paddingVertical: 7,
@@ -238,12 +260,12 @@ const styles = StyleSheet.create({
     borderColor: '#dbdbdb',
     alignItems: 'center',
   },
-  editButtonText: {
+  textoBotonEditar: {
     fontWeight: '600',
     fontSize: 14,
     color: '#000',
   },
-  tabsRow: {
+  filaTabs: {
     flexDirection: 'row',
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: '#dbdbdb',
@@ -256,18 +278,18 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: 'transparent',
   },
-  tabItemActive: {
+  tabActiva: {
     borderBottomColor: '#000',
   },
-  tabIcon: {
+  iconoTab: {
     fontSize: 20,
     color: '#000',
   },
-  divider: {
+  divisor: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: '#dbdbdb',
   },
-  gridImage: {
+  imagenGrilla: {
     width: '100%',
     height: '100%',
   },

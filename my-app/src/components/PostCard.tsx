@@ -1,31 +1,33 @@
+// Componente que representa una publicación individual en el feed.
+// Recibe un objeto "post" por props y muestra toda la información:
+// avatar, nombre, ubicación, imagen, botones de acción, likes y descripción.
+
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import {
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Image, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { Post } from '@/types/post';
 
+// Props que recibe este componente: solo necesita el objeto post completo
 interface PostCardProps {
   post: Post;
 }
 
 export function PostCard({ post }: PostCardProps) {
   const router = useRouter();
-  const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(post.likes);
 
-  function handleLike() {
-    setLiked((prev) => !prev);
-    setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
+  // Estado local del like: cada post maneja su propio corazón y contador
+  const [likeado, setLikeado] = useState(false);
+  const [cantidadLikes, setCantidadLikes] = useState(post.likes);
+
+  // Alterna el like: si estaba likeado lo saca, si no estaba lo pone
+  function toggleLike() {
+    setLikeado((anterior) => !anterior);
+    setCantidadLikes((anterior) => (likeado ? anterior - 1 : anterior + 1));
   }
 
-  function handlePress() {
+  // Navega a la pantalla de detalle del post, pasando todos los datos por parámetros
+  function irAlDetalle() {
     router.push({
       pathname: '/post/[id]',
       params: {
@@ -33,7 +35,7 @@ export function PostCard({ post }: PostCardProps) {
         imageUrl: post.imageUrl,
         username: post.username,
         location: post.location,
-        likes: likeCount,
+        likes: cantidadLikes,
         caption: post.caption,
         avatar: post.avatar,
       },
@@ -41,62 +43,64 @@ export function PostCard({ post }: PostCardProps) {
   }
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Image source={{ uri: post.avatar }} style={styles.avatar} />
-        <View style={styles.headerText}>
-          <Text style={styles.username}>{post.username}</Text>
-          <Text style={styles.location}>{post.location}</Text>
+    <View style={estilos.contenedor}>
+
+      {/* Encabezado: avatar, nombre de usuario y ubicación */}
+      <View style={estilos.header}>
+        <Image source={{ uri: post.avatar }} style={estilos.avatar} />
+        <View style={estilos.textoHeader}>
+          <Text style={estilos.username}>{post.username}</Text>
+          <Text style={estilos.ubicacion}>{post.location}</Text>
         </View>
+        {/* Tres puntos (decorativo, sin acción) */}
         <TouchableOpacity hitSlop={8}>
-          <Text style={styles.moreIcon}>•••</Text>
+          <Text style={estilos.iconoMas}>•••</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Image */}
-      <Pressable onPress={handlePress} onLongPress={handleLike}>
+      {/* Imagen del post: al tocar va al detalle, al mantener presionado da like */}
+      <Pressable onPress={irAlDetalle} onLongPress={toggleLike}>
         <Image
           source={{ uri: post.imageUrl }}
-          style={styles.postImage}
+          style={estilos.imagenPost}
           resizeMode="cover"
         />
       </Pressable>
 
-      {/* Actions */}
-      <View style={styles.actions}>
-        <View style={styles.leftActions}>
-          <TouchableOpacity onPress={handleLike} style={styles.actionBtn}>
-            <Text style={[styles.actionIcon, liked && styles.likedIcon]}>
-              {liked ? '❤️' : '🤍'}
-            </Text>
+      {/* Barra de acciones: like, comentar, compartir y guardar */}
+      <View style={estilos.acciones}>
+        <View style={estilos.accionesIzquierda}>
+          <TouchableOpacity onPress={toggleLike} style={estilos.botonAccion}>
+            <Text style={estilos.iconoAccion}>{likeado ? '❤️' : '🤍'}</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={handlePress} style={styles.actionBtn}>
-            <Text style={styles.actionIcon}>💬</Text>
+          <TouchableOpacity onPress={irAlDetalle} style={estilos.botonAccion}>
+            <Text style={estilos.iconoAccion}>💬</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn}>
-            <Text style={styles.actionIcon}>✈️</Text>
+          <TouchableOpacity style={estilos.botonAccion}>
+            <Text style={estilos.iconoAccion}>✈️</Text>
           </TouchableOpacity>
         </View>
+        {/* Ícono de guardar a la derecha */}
         <TouchableOpacity>
-          <Text style={styles.actionIcon}>🔖</Text>
+          <Text style={estilos.iconoAccion}>🔖</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Likes */}
-      <Text style={styles.likesText}>{likeCount.toLocaleString()} Me gusta</Text>
+      {/* Contador de likes */}
+      <Text style={estilos.textLikes}>{cantidadLikes.toLocaleString()} Me gusta</Text>
 
-      {/* Caption */}
-      <Text style={styles.caption} numberOfLines={2}>
-        <Text style={styles.username}>{post.username} </Text>
+      {/* Descripción del post, máximo 2 líneas */}
+      <Text style={estilos.caption} numberOfLines={2}>
+        <Text style={estilos.username}>{post.username} </Text>
         {post.caption}
       </Text>
+
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
+const estilos = StyleSheet.create({
+  contenedor: {
     backgroundColor: '#fff',
     marginBottom: 8,
   },
@@ -114,7 +118,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#c13584',
   },
-  headerText: {
+  textoHeader: {
     flex: 1,
   },
   username: {
@@ -122,22 +126,22 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#000',
   },
-  location: {
+  ubicacion: {
     fontSize: 11,
     color: '#555',
     marginTop: 1,
   },
-  moreIcon: {
+  iconoMas: {
     fontSize: 14,
     color: '#000',
     letterSpacing: 1,
   },
-  postImage: {
+  imagenPost: {
     width: '100%',
     aspectRatio: 1,
     backgroundColor: '#efefef',
   },
-  actions: {
+  acciones: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -145,20 +149,17 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 4,
   },
-  leftActions: {
+  accionesIzquierda: {
     flexDirection: 'row',
     gap: 12,
   },
-  actionBtn: {
+  botonAccion: {
     padding: 2,
   },
-  actionIcon: {
+  iconoAccion: {
     fontSize: 24,
   },
-  likedIcon: {
-    transform: [{ scale: 1.1 }],
-  },
-  likesText: {
+  textLikes: {
     fontWeight: '700',
     fontSize: 13,
     color: '#000',

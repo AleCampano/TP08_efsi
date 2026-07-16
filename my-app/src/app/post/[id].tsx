@@ -1,3 +1,7 @@
+// Pantalla de detalle de una publicación.
+// Recibe los datos del post por parámetros de navegación (router.push desde PostCard o Perfil).
+// Muestra la imagen en grande, el botón de like con contador en tiempo real y comentarios simulados.
+
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
@@ -8,18 +12,18 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
-// Comentarios simulados
-const MOCK_COMMENTS = [
-  { id: '1', username: 'michi_lover', text: 'Qué lindo! 😍', avatar: 'https://i.pravatar.cc/150?img=3' },
-  { id: '2', username: 'cat.world', text: 'Me encanta este gatito 🐱', avatar: 'https://i.pravatar.cc/150?img=5' },
-  { id: '3', username: 'fluffy_paws', text: '❤️❤️❤️', avatar: 'https://i.pravatar.cc/150?img=7' },
-  { id: '4', username: 'meow.daily', text: 'Un angelito 🥹', avatar: 'https://i.pravatar.cc/150?img=9' },
-  { id: '5', username: 'gatito_fan', text: 'Lo quiero adoptar ya!!', avatar: 'https://i.pravatar.cc/150?img=11' },
+// Lista fija de comentarios simulados
+const COMENTARIOS = [
+  { id: '1', username: 'michi_lover',  texto: 'Qué lindo! 😍',              avatar: 'https://i.pravatar.cc/150?img=3'  },
+  { id: '2', username: 'cat.world',    texto: 'Me encanta este gatito 🐱',  avatar: 'https://i.pravatar.cc/150?img=5'  },
+  { id: '3', username: 'fluffy_paws',  texto: '❤️❤️❤️',                    avatar: 'https://i.pravatar.cc/150?img=7'  },
+  { id: '4', username: 'meow.daily',   texto: 'Un angelito 🥹',             avatar: 'https://i.pravatar.cc/150?img=9'  },
+  { id: '5', username: 'gatito_fan',   texto: 'Lo quiero adoptar ya!!',     avatar: 'https://i.pravatar.cc/150?img=11' },
 ];
 
-export default function PostDetailScreen() {
+export default function PantallaDetalle() {
+  // useLocalSearchParams recupera los parámetros que se enviaron al navegar a esta pantalla
   const params = useLocalSearchParams<{
     id: string;
     imageUrl: string;
@@ -31,85 +35,91 @@ export default function PostDetailScreen() {
   }>();
 
   const navigation = useNavigation();
-  const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(Number(params.likes ?? 0));
 
+  // Estado del like: si está likeado y cuántos likes tiene
+  const [likeado, setLikeado] = useState(false);
+  const [cantidadLikes, setCantidadLikes] = useState(Number(params.likes ?? 0));
+
+  // Cambia el título del header por el nombre de usuario del post
   useEffect(() => {
     navigation.setOptions({ title: params.username ?? 'Publicación' });
   }, [navigation, params.username]);
 
-  function handleLike() {
-    setLiked((prev) => !prev);
-    setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
+  // Alterna el like y actualiza el contador inmediatamente
+  function toggleLike() {
+    setLikeado((anterior) => !anterior);
+    setCantidadLikes((anterior) => (likeado ? anterior - 1 : anterior + 1));
   }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Header del post */}
-      <View style={styles.header}>
-        <Image source={{ uri: params.avatar }} style={styles.avatar} />
-        <View style={styles.headerText}>
-          <Text style={styles.username}>{params.username}</Text>
-          <Text style={styles.location}>{params.location}</Text>
+    <ScrollView style={estilos.contenedor} showsVerticalScrollIndicator={false}>
+
+      {/* Encabezado: avatar y nombre de usuario */}
+      <View style={estilos.header}>
+        <Image source={{ uri: params.avatar }} style={estilos.avatar} />
+        <View style={estilos.textoHeader}>
+          <Text style={estilos.username}>{params.username}</Text>
+          <Text style={estilos.ubicacion}>{params.location}</Text>
         </View>
       </View>
 
-      {/* Imagen en alta definición */}
+      {/* Imagen del post en tamaño completo */}
       <Image
         source={{ uri: params.imageUrl }}
-        style={styles.image}
+        style={estilos.imagen}
         resizeMode="cover"
       />
 
-      {/* Acciones */}
-      <View style={styles.actions}>
-        <View style={styles.leftActions}>
-          <TouchableOpacity onPress={handleLike} style={styles.actionBtn}>
-            <Text style={styles.actionIcon}>{liked ? '❤️' : '🤍'}</Text>
+      {/* Barra de acciones: like, comentar, compartir y guardar */}
+      <View style={estilos.acciones}>
+        <View style={estilos.accionesIzquierda}>
+          <TouchableOpacity onPress={toggleLike} style={estilos.botonAccion}>
+            <Text style={estilos.iconoAccion}>{likeado ? '❤️' : '🤍'}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn}>
-            <Text style={styles.actionIcon}>💬</Text>
+          <TouchableOpacity style={estilos.botonAccion}>
+            <Text style={estilos.iconoAccion}>💬</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn}>
-            <Text style={styles.actionIcon}>✈️</Text>
+          <TouchableOpacity style={estilos.botonAccion}>
+            <Text style={estilos.iconoAccion}>✈️</Text>
           </TouchableOpacity>
         </View>
         <TouchableOpacity>
-          <Text style={styles.actionIcon}>🔖</Text>
+          <Text style={estilos.iconoAccion}>🔖</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Likes */}
-      <Text style={styles.likesText}>{likeCount.toLocaleString()} Me gusta</Text>
+      {/* Contador de likes actualizado en tiempo real */}
+      <Text style={estilos.textLikes}>{cantidadLikes.toLocaleString()} Me gusta</Text>
 
-      {/* Caption */}
-      <Text style={styles.caption}>
-        <Text style={styles.username}>{params.username} </Text>
+      {/* Descripción del post */}
+      <Text style={estilos.caption}>
+        <Text style={estilos.username}>{params.username} </Text>
         {params.caption}
       </Text>
 
-      {/* Separador */}
-      <View style={styles.divider} />
+      <View style={estilos.divisor} />
 
-      {/* Comentarios */}
-      <Text style={styles.commentsTitle}>Comentarios</Text>
-      {MOCK_COMMENTS.map((comment) => (
-        <View key={comment.id} style={styles.comment}>
-          <Image source={{ uri: comment.avatar }} style={styles.commentAvatar} />
-          <Text style={styles.commentText}>
-            <Text style={styles.username}>{comment.username} </Text>
-            {comment.text}
+      {/* Sección de comentarios simulados */}
+      <Text style={estilos.tituloComentarios}>Comentarios</Text>
+      {COMENTARIOS.map((comentario) => (
+        <View key={comentario.id} style={estilos.comentario}>
+          <Image source={{ uri: comentario.avatar }} style={estilos.avatarComentario} />
+          <Text style={estilos.textoComentario}>
+            <Text style={estilos.username}>{comentario.username} </Text>
+            {comentario.texto}
           </Text>
         </View>
       ))}
 
-      <View style={styles.bottomSpacing} />
+      {/* Espacio al final para que el último comentario no quede pegado al borde */}
+      <View style={estilos.espacioFinal} />
+
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
+const estilos = StyleSheet.create({
+  contenedor: {
     flex: 1,
     backgroundColor: '#fff',
   },
@@ -127,7 +137,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#c13584',
   },
-  headerText: {
+  textoHeader: {
     flex: 1,
   },
   username: {
@@ -135,16 +145,16 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#000',
   },
-  location: {
+  ubicacion: {
     fontSize: 11,
     color: '#555',
   },
-  image: {
+  imagen: {
     width: '100%',
     aspectRatio: 1,
     backgroundColor: '#efefef',
   },
-  actions: {
+  acciones: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -152,17 +162,17 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingBottom: 4,
   },
-  leftActions: {
+  accionesIzquierda: {
     flexDirection: 'row',
     gap: 14,
   },
-  actionBtn: {
+  botonAccion: {
     padding: 2,
   },
-  actionIcon: {
+  iconoAccion: {
     fontSize: 26,
   },
-  likesText: {
+  textLikes: {
     fontWeight: '700',
     fontSize: 13,
     color: '#000',
@@ -176,38 +186,38 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
     lineHeight: 18,
   },
-  divider: {
+  divisor: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: '#dbdbdb',
     marginVertical: 8,
     marginHorizontal: 12,
   },
-  commentsTitle: {
+  tituloComentarios: {
     fontWeight: '700',
     fontSize: 13,
     color: '#000',
     paddingHorizontal: 12,
     marginBottom: 8,
   },
-  comment: {
+  comentario: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     paddingHorizontal: 12,
     marginBottom: 12,
     gap: 10,
   },
-  commentAvatar: {
+  avatarComentario: {
     width: 30,
     height: 30,
     borderRadius: 15,
   },
-  commentText: {
+  textoComentario: {
     flex: 1,
     fontSize: 13,
     color: '#000',
     lineHeight: 18,
   },
-  bottomSpacing: {
+  espacioFinal: {
     height: 40,
   },
 });

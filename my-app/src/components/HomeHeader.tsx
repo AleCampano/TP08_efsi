@@ -1,17 +1,22 @@
+// Componente del encabezado superior del feed.
+// Muestra el logo "Catstagram" a la izquierda y dos íconos a la derecha.
+// No recibe props porque siempre muestra lo mismo.
+
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export function HomeHeader() {
   return (
-    <View style={styles.container}>
-      {/* Logo: ícono + texto */}
-      <View style={styles.logoRow}>
+    <View style={estilos.contenedor}>
+
+      {/* Logo: ícono de gato + texto "Catstagram" con colores degradados */}
+      <View style={estilos.filaLogo}>
         <Image
           source={require('@/assets/images/logo.png')}
-          style={styles.logoIcon}
+          style={estilos.iconoLogo}
           resizeMode="contain"
         />
-        {/* Texto con degradado simulado letra por letra */}
-        <Text style={styles.logoText}>
+        {/* Cada letra tiene un color distinto para simular el degradado de Instagram */}
+        <Text style={estilos.textoLogo}>
           <Text style={{ color: '#f58529' }}>C</Text>
           <Text style={{ color: '#e6683c' }}>a</Text>
           <Text style={{ color: '#dc2743' }}>t</Text>
@@ -25,21 +30,22 @@ export function HomeHeader() {
         </Text>
       </View>
 
-      {/* Íconos derecha */}
-      <View style={styles.icons}>
+      {/* Íconos de la derecha: notificaciones y mensajes */}
+      <View style={estilos.iconos}>
         <TouchableOpacity hitSlop={8}>
-          <Text style={styles.icon}>♡</Text>
+          <Text style={estilos.icono}>♡</Text>
         </TouchableOpacity>
         <TouchableOpacity hitSlop={8}>
-          <Text style={styles.icon}>✉</Text>
+          <Text style={estilos.icono}>✉</Text>
         </TouchableOpacity>
       </View>
+
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
+const estilos = StyleSheet.create({
+  contenedor: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -49,28 +55,27 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#dbdbdb',
   },
-  logoRow: {
+  filaLogo: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 0,
   },
-  logoIcon: {
+  iconoLogo: {
     width: 42,
     height: 42,
     marginLeft: -4,
     transform: [{ scale: 1.6 }],
   },
-  logoText: {
+  textoLogo: {
     fontSize: 23,
     fontWeight: '400',
     fontStyle: 'italic',
     letterSpacing: 0.5,
   },
-  icons: {
+  iconos: {
     flexDirection: 'row',
     gap: 18,
   },
-  icon: {
+  icono: {
     fontSize: 24,
     color: '#000',
   },
